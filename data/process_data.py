@@ -26,8 +26,19 @@ def load_data(messages_filepath, categories_filepath):
     # merge datasets
     df = pd.merge(messages, categories, how="left", on=['id'])
 
+
+    return df
+
+
+# Drop duplicated records
+def clean_data(df):
+    """
+
+    :param df: dataframe
+    :return: dadaframe drop dulplicated record
+    """
     # create a dataframe of the 36 individual category columns
-    categories = categories["categories"].str.split(';', expand=True)
+    categories = df['categories'].str.split(';', expand=True)
 
     # select the first row of the categories dataframe
     row = dict(categories.iloc[0])
@@ -50,23 +61,14 @@ def load_data(messages_filepath, categories_filepath):
         categories[column] = categories[column].astype("int")
 
     # drop the original categories column from `df`
+    categories.related.replace(2, 1, inplace=True)
     df = df.drop(columns='categories')
 
     # concatenate the original dataframe with the new `categories` dataframe
     df = df.reset_index(drop=True)
     categories = categories.reset_index(drop=True)
     df = pd.concat([df, categories], axis=1, join='inner')
-    df.head()
-    return df
-
-
-# Drop duplicated records
-def clean_data(df):
-    """
-
-    :param df: dataframe
-    :return: dadaframe drop dulplicated record
-    """
+    #df.head()
     return df.drop_duplicates()
 
 

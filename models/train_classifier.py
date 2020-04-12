@@ -7,9 +7,9 @@ from sqlalchemy import create_engine
 import re
 import nltk
 
-#nltk.download(['punkt', 'wordnet'])
+nltk.download(['punkt', 'wordnet','stopwords'])
 from nltk.tokenize import word_tokenize
-# from nltk.corpus import stopwords
+from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
 from sklearn.pipeline import Pipeline
@@ -35,7 +35,7 @@ def load_data(database_filepath):
     """
     engine = create_engine("sqlite:///"+database_filepath)
     df = pd.read_sql_table('ETLResults', engine)
-    df = df[df.related != 2]
+    #df = df[df.related != 2]
     X = df.message
     y = df.iloc[:, 4:40]
     print(X.shape, y.shape, df.columns[4:])
@@ -48,15 +48,23 @@ def tokenize(text):
     :param text: message from dataset
     :return: cleaned token
     """
+   # tokens = word_tokenize(text)
+   # lemmatizer = WordNetLemmatizer()
+
+    #clean_tokens = []
+    #for tok in tokens:
+    #    clean_tok = lemmatizer.lemmatize(tok).lower().strip()
+    #    clean_tokens.append(clean_tok)
+
+    # remove special characters and lowercase
+    text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
+    # tokenize
     tokens = word_tokenize(text)
+    # lemmatize, remove stopwords
+    stop_words = stopwords.words("english")
     lemmatizer = WordNetLemmatizer()
-
-    clean_tokens = []
-    for tok in tokens:
-        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
-        clean_tokens.append(clean_tok)
-
-    return clean_tokens
+    tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words]
+    return tokens
 
 
 def build_model():
