@@ -30,7 +30,7 @@ engine = create_engine('sqlite:///../data/DisasterResponse.db')
 df = pd.read_sql_table('ETLResults', engine)
 
 # load model
-model = joblib.load("../models/data.pkl")
+model = joblib.load("../models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -39,13 +39,37 @@ model = joblib.load("../models/data.pkl")
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
-    
+
+    # extract data needed for visuals
+    category_dict={}
+    for col_name in df.columns[4:]:
+        category_count = df[df[col_name] == 1].count()['message']
+        category_dict[col_name]=category_count
+
+    print(category_dict)
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
+        {
+            'data': [
+                Bar(
+                    x=list(category_dict.keys()),
+                    y=list(category_dict.values())
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Categories"
+                }
+            }
+        },
         {
             'data': [
                 Bar(
@@ -68,6 +92,7 @@ def index():
     
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
+    print("ids",ids)
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
     
     # render web page with plotly graphs
@@ -82,6 +107,7 @@ def go():
 
     # use model to predict classification for query
     classification_labels = model.predict([query])[0]
+    print(classification_labels)
     classification_results = dict(zip(df.columns[4:], classification_labels))
 
     # This will render the go.html Please see that file. 
@@ -93,7 +119,7 @@ def go():
 
 
 def main():
-    app.run(host='0.0.0.0', port=3001, debug=True)
+    app.run(host='127.0.0.1', port=3001, debug=True)
 
 
 if __name__ == '__main__':
